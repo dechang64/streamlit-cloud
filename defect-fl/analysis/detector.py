@@ -59,8 +59,9 @@ class PCBDefectDetector:
         "good": "none",
     }
 
-    def __init__(self, model_size: str = "n", device: Optional[str] = None):
+    def __init__(self, model_size: str = "n", device: Optional[str] = None, mode: str = "mock"):
         self.model_size = model_size
+        self.mode = mode
         self.device = device or ("cuda" if __import__("torch").cuda.is_available() else "cpu")
         self.model = None
 

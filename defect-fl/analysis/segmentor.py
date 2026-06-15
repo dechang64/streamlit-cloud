@@ -43,9 +43,10 @@ class DefectSegmentation:
 class PCBDefectSegmentor:
     """SAM2-based PCB defect segmentor."""
 
-    def __init__(self, checkpoint: str = "sam2_hiera_small.pt"):
+    def __init__(self, checkpoint: str = "sam2_hiera_small.pt", mode: str = "mock"):
         self.predictor = None
         self.checkpoint = checkpoint
+        self.mode = mode
 
     def _ensure_predictor(self):
         if self.predictor is None:

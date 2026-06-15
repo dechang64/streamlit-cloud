@@ -1,3 +1,4 @@
+from __future__ import annotations
 """
 Reading-FL — 坐忘·阅读联邦平台
 Streamlit Cloud App

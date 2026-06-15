@@ -1,3 +1,4 @@
+from __future__ import annotations
 """
 Defect-FL — PCB缺陷联邦检测平台
 Streamlit Cloud App

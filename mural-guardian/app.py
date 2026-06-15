@@ -1,3 +1,4 @@
+from __future__ import annotations
 """
 Mural Guardian — 石窟壁画智能修复平台
 Streamlit Cloud App

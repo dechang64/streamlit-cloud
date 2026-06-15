@@ -1,4 +1,3 @@
-from __future__ import annotations
 # ── python/analysis/segmentor.py ──
 """
 SAM2 PCB Defect Segmentor

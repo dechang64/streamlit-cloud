@@ -1,4 +1,3 @@
-from __future__ import annotations
 # ── python/analysis/gradcam.py ──
 """
 Grad-CAM for PCB Defect Classification

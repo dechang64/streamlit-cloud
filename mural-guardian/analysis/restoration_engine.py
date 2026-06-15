@@ -9,7 +9,6 @@ Supports two modes:
     - 'mock':     Deterministic mock restoration for testing
 """
 
-from __future__ import annotations
 import numpy as np
 from typing import Optional, List, Dict, Any, Tuple
 from dataclasses import dataclass, field

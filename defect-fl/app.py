@@ -1,4 +1,3 @@
-from __future__ import annotations
 """
 Defect-FL — PCB缺陷联邦检测平台
 Streamlit Cloud App
@@ -83,9 +82,9 @@ st.markdown("""
 # Session State
 # ============================================================
 if "detector" not in st.session_state:
-    st.session_state.detector = PCBDefectDetector()
+    st.session_state.detector = PCBDefectDetector(mode="mock")
 if "segmentor" not in st.session_state:
-    st.session_state.segmentor = PCBDefectSegmentor()
+    st.session_state.segmentor = PCBDefectSegmentor(mode="mock")
 if "fl_engine" not in st.session_state:
     st.session_state.fl_engine = DefectFLEngine()
 if "history" not in st.session_state:

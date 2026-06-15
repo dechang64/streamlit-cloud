@@ -1,4 +1,3 @@
-from __future__ import annotations
 # ── analysis/vision_rag.py ──
 """
 Vision RAG Engine

@@ -1,4 +1,3 @@
-from __future__ import annotations
 # ── python/analysis/fl_engine.py ──
 """
 Defect-FL Federated Learning Engine
@@ -103,48 +102,10 @@ class DefectFLEngine:
         return total_loss / max(total, 1), correct / max(total, 1)
 
     @staticmethod
-    def _fedavg(params_list, client_data_sizes=None):
-        """FedAvg with FedCtx delegation (Rust) or local Python fallback."""
-        if not params_list:
-            raise ValueError("params_list is empty — cannot aggregate")
-
-        # Try FedCtx aggregation
-        try:
-            from core.grpc_client import get_fedctx_client
-            client = get_fedctx_client()
-            if client.available:
-                for i, params in enumerate(params_list):
-                    flat_params = torch.cat([p.flatten() for p in params.values()]).numpy()
-                    n_samples = client_data_sizes[i] if client_data_sizes else len(params)
-                    client.fl_submit_update(
-                        client_id=f"defect_client_{i}", round_num=0,
-                        parameters=flat_params.tolist(), num_samples=n_samples,
-                    )
-                agg_resp = client.fl_aggregate(strategy="fedavg")
-                if agg_resp and agg_resp.get("parameters"):
-                    global_params = torch.tensor(agg_resp["parameters"], dtype=torch.float32)
-                    offset = 0
-                    avg = OrderedDict()
-                    for key in params_list[0].keys():
-                        shape = params_list[0][key].shape
-                        size = params_list[0][key].numel()
-                        avg[key] = global_params[offset:offset + size].reshape(shape)
-                        offset += size
-                    return avg
-        except (ImportError, Exception):
-            pass
-
-        # Local fallback
-        if client_data_sizes is not None and len(client_data_sizes) == len(params_list):
-            total = sum(client_data_sizes)
-            if total == 0:
-                raise ValueError("Total client data size is zero — cannot aggregate")
-            weights = [n / total for n in client_data_sizes]
-        else:
-            weights = [1.0 / len(params_list)] * len(params_list)
+    def _fedavg(params_list):
         avg = OrderedDict()
         for key in params_list[0]:
-            avg[key] = sum(w * p[key] for w, p in zip(weights, params_list))
+            avg[key] = torch.stack([p[key] for p in params_list]).mean(dim=0)
         return avg
 
     def run(self, features, labels, n_clients=3, rounds=10, progress_callback=None):

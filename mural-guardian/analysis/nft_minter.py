@@ -14,7 +14,6 @@ The certificate is the collectible — not the image itself.
 This avoids copyright issues while preserving cultural provenance.
 """
 
-from __future__ import annotations
 import hashlib
 import json
 import uuid

@@ -1,4 +1,3 @@
-from __future__ import annotations
 # ── analysis/gradcam.py ──
 """
 Grad-CAM Explainability

@@ -4,7 +4,6 @@ FundFL Audit Chain
 Immutable audit trail for fund risk computations.
 """
 
-from __future__ import annotations
 import hashlib
 import json
 import time

@@ -1,4 +1,3 @@
-from __future__ import annotations
 """
 Embodied-FL — 具身智能联邦检测平台
 Streamlit Cloud App

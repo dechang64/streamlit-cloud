@@ -1,4 +1,3 @@
-from __future__ import annotations
 """
 Organoid-FL — 类器官智能分析平台
 Streamlit Cloud App
@@ -25,7 +24,7 @@ from utils.constants import (
     DEFAULT_LR, DEFAULT_BATCH_SIZE, DEFAULT_LOCAL_EPOCHS, COLORS,
     DEFAULT_INPUT_DIM, DEFAULT_HIDDEN_DIM,
 )
-from utils.helpers import generate_synthetic_features
+from utils.helpers import generate_synthetic_features, split_data_non_iid
 
 
 # ============================================================

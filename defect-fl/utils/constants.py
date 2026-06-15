@@ -1,4 +1,3 @@
-from __future__ import annotations
 # ── python/utils/constants.py
 DEFECT_CLASSES = ["missing_hole", "mouse_bite", "open_circuit", "short", "spur", "spurious_copper"]
 

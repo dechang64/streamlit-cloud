@@ -1,4 +1,3 @@
-from __future__ import annotations
 # ── analysis/feature_extractor_v2.py ──
 """
 DINOv2 Feature Extractor

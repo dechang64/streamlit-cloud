@@ -1,4 +1,3 @@
-from __future__ import annotations
 """
 FundFL — 私募基金联邦学习分析平台
 =====================================

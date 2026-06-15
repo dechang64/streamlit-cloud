@@ -4,7 +4,6 @@ FundFL HNSW Vector Index
 Lightweight HNSW implementation for fund risk profile similarity search.
 """
 
-from __future__ import annotations
 import numpy as np
 from typing import List, Tuple, Optional
 from dataclasses import dataclass

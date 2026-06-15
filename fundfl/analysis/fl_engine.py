@@ -5,7 +5,6 @@ Simulated FedAvg for cross-institutional fund risk model training.
 Privacy-preserving: only aggregated risk feature vectors are shared.
 """
 
-from __future__ import annotations
 import numpy as np
 from typing import List, Dict, Optional, Tuple
 from dataclasses import dataclass, field

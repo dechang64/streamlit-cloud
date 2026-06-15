@@ -1,4 +1,3 @@
-from __future__ import annotations
 # ── utils/constants.py ──
 """Shared constants for Organoid-FL platform."""
 

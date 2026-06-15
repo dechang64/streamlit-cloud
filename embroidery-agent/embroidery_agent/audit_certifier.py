@@ -123,7 +123,10 @@ class AuditCertifier:
 
     def append(self, operation: str, client_id: str = "",
                details: str = "") -> AuditEntry:
-        """Append an audit entry (mirrors embodied-fl AuditChain::append)."""
+        """Append an audit entry (mirrors embodied-fl AuditChain::append).
+
+        Also syncs to FedCtx audit service if available.
+        """
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
 
@@ -150,11 +153,26 @@ class AuditCertifier:
         conn.commit()
         conn.close()
 
-        return AuditEntry(
+        entry = AuditEntry(
             index=index, timestamp=timestamp, operation=operation,
             client_id=client_id, details=details,
             hash=hash_val, prev_hash=prev_hash,
         )
+
+        # Sync to FedCtx audit service
+        try:
+            from core.grpc_client import get_fedctx_client
+            fedctx = get_fedctx_client()
+            if fedctx.available:
+                fedctx.audit_append(
+                    event_type=operation,
+                    node_id=client_id or "embroidery_server",
+                    metadata={"details": details, "hash": hash_val},
+                )
+        except (ImportError, Exception):
+            pass
+
+        return entry
 
     def certify_design(self, design_id: str, designer_id: str,
                        stitch_count: int, color_count: int,

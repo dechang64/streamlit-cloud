@@ -1,4 +1,3 @@
-from __future__ import annotations
 # ── core/fl_engine.py ──
 """
 Reading-FL v2 Federated Learning Engine
@@ -11,6 +10,11 @@ Upgrade from v1:
 
 Emotions: joy, sadness, anger, fear, surprise, contemplation
 Quality: 0-5 scale (learned from community feedback)
+
+FedCtx integration:
+- When unified-fl-backend is available, delegates FedAvg aggregation
+  to the Rust gRPC server (supports FedAvg/FedProx/EWA + DP)
+- Falls back to local Python FedAvg when FedCtx is unavailable
 """
 
 import numpy as np
@@ -19,7 +23,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
 from collections import OrderedDict
-from typing import Optional, Callable
+from typing import List, Optional, Callable
 import time
 
 
@@ -80,6 +84,8 @@ class ReadingFLEngine:
         val_y = torch.tensor(labels[val_idx], dtype=torch.long)
 
         # Split among clients (Non-IID: each community reads different genres)
+        if n_clients <= 0:
+            raise ValueError("n_clients must be positive")
         client_size = len(train_X) // n_clients
         client_splits = []
         for i in range(n_clients):
@@ -105,7 +111,8 @@ class ReadingFLEngine:
                     "n_samples": len(split_idx),
                 })
 
-            global_params = self._fedavg(client_params_list)
+            client_data_sizes = [len(split_idx) for split_idx in client_splits]
+            global_params = self._fedavg(client_params_list, client_data_sizes)
             self.classifier.load_state_dict(global_params)
             val_loss, val_acc = self._evaluate(self.classifier, val_X, val_y)
             elapsed = time.time() - t0
@@ -138,6 +145,7 @@ class ReadingFLEngine:
                 out = model(bx)
                 loss = criterion(out, by)
                 loss.backward()
+                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
                 optimizer.step()
 
         model.eval()
@@ -150,15 +158,62 @@ class ReadingFLEngine:
         return OrderedDict(model.state_dict()), loss, acc
 
     def _fedavg(self, params_list, client_data_sizes=None):
+        """FedAvg aggregation with optional sample-weighted averaging.
+
+        Args:
+            params_list: List of client model state dicts.
+            client_data_sizes: Optional list of sample counts per client.
+                If provided, weights each client by n_k / N (standard FedAvg).
+                If None, falls back to simple average (equal weight).
+
+        FedCtx integration:
+            When unified-fl-backend is available, delegates aggregation
+            to the Rust server for better performance and additional
+            strategies (FedProx/EWA/DP).
+        """
         if not params_list:
-            raise ValueError("params_list is empty — cannot aggregate")
+            raise ValueError("params_list is empty, cannot aggregate")
+
+        # Try FedCtx aggregation
+        try:
+            from core.grpc_client import get_fedctx_client
+            client = get_fedctx_client()
+            if client.available:
+                # Submit all client updates to FedCtx
+                for i, params in enumerate(params_list):
+                    flat_params = torch.cat([p.flatten() for p in params.values()]).numpy()
+                    n_samples = client_data_sizes[i] if client_data_sizes else len(params)
+                    client.fl_submit_update(
+                        client_id=f"reading_client_{i}",
+                        round_num=0,
+                        parameters=flat_params.tolist(),
+                        num_samples=n_samples,
+                    )
+                # Trigger aggregation
+                agg_resp = client.fl_aggregate(strategy="fedavg")
+                if agg_resp and agg_resp.get("parameters"):
+                    # Convert back to state dict
+                    global_params = torch.tensor(agg_resp["parameters"], dtype=torch.float32)
+                    offset = 0
+                    avg = OrderedDict()
+                    for key in params_list[0].keys():
+                        shape = params_list[0][key].shape
+                        size = params_list[0][key].numel()
+                        avg[key] = global_params[offset:offset + size].reshape(shape)
+                        offset += size
+                    return avg
+        except (ImportError, Exception):
+            pass  # Fall through to local aggregation
+
+        # Local fallback: Python FedAvg
         if client_data_sizes is not None and len(client_data_sizes) == len(params_list):
             total = sum(client_data_sizes)
             if total == 0:
-                raise ValueError("Total client data size is zero — cannot aggregate")
+                raise ValueError("Total client_data_sizes is zero, cannot aggregate")
             weights = [n / total for n in client_data_sizes]
         else:
             weights = [1.0 / len(params_list)] * len(params_list)
+
         avg = OrderedDict()
         for key in params_list[0].keys():
             avg[key] = sum(w * p[key] for w, p in zip(weights, params_list))

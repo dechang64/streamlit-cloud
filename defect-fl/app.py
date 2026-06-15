@@ -83,9 +83,9 @@ st.markdown("""
 # Session State
 # ============================================================
 if "detector" not in st.session_state:
-    st.session_state.detector = PCBDefectDetector(mode="mock")
+    st.session_state.detector = PCBDefectDetector()
 if "segmentor" not in st.session_state:
-    st.session_state.segmentor = PCBDefectSegmentor(mode="mock")
+    st.session_state.segmentor = PCBDefectSegmentor()
 if "fl_engine" not in st.session_state:
     st.session_state.fl_engine = DefectFLEngine()
 if "history" not in st.session_state:

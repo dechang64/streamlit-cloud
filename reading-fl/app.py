@@ -85,8 +85,10 @@ if "matcher" not in st.session_state:
     st.session_state.matcher = ReaderMatcher(embedding_dim=64)
 if "resonance" not in st.session_state:
     st.session_state.resonance = ResonanceDetector()
+if "audit_chain" not in st.session_state:
+    st.session_state.audit_chain = AuditChain()
 if "provenance" not in st.session_state:
-    st.session_state.provenance = DataProvenance()
+    st.session_state.provenance = DataProvenance(audit_chain=st.session_state.audit_chain)
 if "reflections" not in st.session_state:
     st.session_state.reflections = []
 if "reader_profiles" not in st.session_state:
